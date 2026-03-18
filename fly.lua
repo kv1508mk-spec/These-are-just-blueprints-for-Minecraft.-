@@ -6,13 +6,25 @@ local Lighting = game:GetService("Lighting")
 local flying = false
 local speed = 120
 
-local char, root, humanoid
-local bv, bg
+local speedOn = false
+local walkspeed = 50
 
--- 🌞 FULLBRIGHT
 local fullbright = false
 local old = {}
 
+local char, root, humanoid
+local bv, bg
+
+-- 👤 персонаж
+local function setup()
+ char = player.Character or player.CharacterAdded:Wait()
+ root = char:WaitForChild("HumanoidRootPart")
+ humanoid = char:WaitForChild("Humanoid")
+end
+setup()
+player.CharacterAdded:Connect(setup)
+
+-- 🌞 FULLBRIGHT
 local function enableFullbright()
  old.Brightness = Lighting.Brightness
  old.Ambient = Lighting.Ambient
@@ -33,15 +45,13 @@ local function disableFullbright()
  end
 end
 
--- 👤 персонаж
-local function setup()
- char = player.Character or player.CharacterAdded:Wait()
- root = char:WaitForChild("HumanoidRootPart")
- humanoid = char:WaitForChild("Humanoid")
-end
-
-setup()
-player.CharacterAdded:Connect(setup)
+-- 💤 Anti-AFK
+local VirtualUser = game:GetService("VirtualUser")
+player.Idled:Connect(function()
+ VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+ wait(1)
+ VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
 
 -- 👻 ноуклип
 RunService.Stepped:Connect(function()
@@ -54,7 +64,7 @@ RunService.Stepped:Connect(function()
  end
 end)
 
--- 🪽 старт
+-- 🪽 ФЛАЙ
 local function startFly()
  flying = true
  humanoid:ChangeState(Enum.HumanoidStateType.Physics)
@@ -69,7 +79,6 @@ local function startFly()
  bg.Parent = root
 end
 
--- 🪶 стоп
 local function stopFly()
  flying = false
  humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
@@ -78,23 +87,162 @@ local function stopFly()
  if bg then bg:Destroy() end
 end
 
--- 🎮 управление
+-- 🎛 GUI
+local screen = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local frame = Instance.new("Frame", screen)
+frame.Size = UDim2.new(0,220,0,240)
+frame.Position = UDim2.new(0,20,0,100)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+
+local function makeButton(text, y)
+ local btn = Instance.new("TextButton", frame)
+ btn.Size = UDim2.new(1,0,0,40)
+ btn.Position = UDim2.new(0,0,0,y)
+ btn.Text = text
+ btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+ btn.TextColor3 = Color3.new(1,1,1)
+ return btn
+end
+
+-- кнопки
+local flyBtn = makeButton("Fly: OFF",0)
+local fbBtn = makeButton("FullBright: OFF",40)
+local speedBtn = makeButton("Speed: OFF",80)
+
+-- скорость
+local speedLabel = Instance.new("TextLabel", frame)
+speedLabel.Size = UDim2.new(1,0,0,30)
+speedLabel.Position = UDim2.new(0,0,0,120)
+speedLabel.Text = "Speed: "..walkspeed
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextColor3 = Color3.new(1,1,1)
+
+local plusBtn = makeButton("+",150)
+local minusBtn = makeButton("-",190)
+
+-- ❌ Закрыть GUI и выключить всё
+local closeBtn = Instance.new("TextButton", frame)
+closeBtn.Size = UDim2.new(0,30,0,30)
+closeBtn.Position = UDim2.new(1,-35,0,5)
+closeBtn.Text = "X"
+closeBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+closeBtn.TextColor3 = Color3.new(1,1,1)
+
+-- 🖱 Перетаскивание GUI
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+frame.InputBegan:Connect(function(input)
+ if input.UserInputType == Enum.UserInputType.MouseButton1
+ or input.UserInputType == Enum.UserInputType.Touch then
+  dragging = true
+  dragStart = input.Position
+  startPos = frame.Position
+
+  input.Changed:Connect(function()
+   if input.UserInputState == Enum.UserInputState.End then
+    dragging = false
+   end
+  end)
+ end
+end)
+
+frame.InputChanged:Connect(function(input)
+ if input.UserInputType == Enum.UserInputType.MouseMovement
+ or input.UserInputType == Enum.UserInputType.Touch then
+  dragInput = input
+ end
+end)
+
+UIS.InputChanged:Connect(function(input)
+ if input == dragInput and dragging then
+  local delta = input.Position - dragStart
+  frame.Position = UDim2.new(
+   startPos.X.Scale,
+   startPos.X.Offset + delta.X,
+   startPos.Y.Scale,
+   startPos.Y.Offset + delta.Y
+  )
+ end
+end)
+
+-- 🪽 Fly
+flyBtn.MouseButton1Click:Connect(function()
+ if flying then
+  stopFly()
+  flyBtn.Text = "Fly: OFF"
+ else
+  startFly()
+  flyBtn.Text = "Fly: ON"
+ end
+end)
+
+-- 🌞 FullBright
+fbBtn.MouseButton1Click:Connect(function()
+ fullbright = not fullbright
+ if fullbright then
+  enableFullbright()
+  fbBtn.Text = "FullBright: ON"
+ else
+  disableFullbright()
+  fbBtn.Text = "FullBright: OFF"
+ end
+end)
+
+-- ⚡ Speed
+speedBtn.MouseButton1Click:Connect(function()
+ speedOn = not speedOn
+ humanoid.WalkSpeed = speedOn and walkspeed or 16
+ speedBtn.Text = speedOn and "Speed: ON" or "Speed: OFF"
+end)
+
+-- ➕ скорость
+plusBtn.MouseButton1Click:Connect(function()
+ walkspeed = walkspeed + 5
+ speedLabel.Text = "Speed: "..walkspeed
+ if speedOn then humanoid.WalkSpeed = walkspeed end
+end)
+
+-- ➖ скорость
+minusBtn.MouseButton1Click:Connect(function()
+ walkspeed = math.max(5, walkspeed - 5)
+ speedLabel.Text = "Speed: "..walkspeed
+ if speedOn then humanoid.WalkSpeed = walkspeed end
+end)
+
+-- ❌ кнопка закрыть
+closeBtn.MouseButton1Click:Connect(function()
+ if flying then stopFly() flyBtn.Text = "Fly: OFF" end
+ speedOn = false
+ humanoid.WalkSpeed = 16
+ speedBtn.Text = "Speed: OFF"
+ if fullbright then disableFullbright() fullbright = false fbBtn.Text = "FullBright: OFF" end
+ frame.Visible = false
+end)
+
+-- 🎮 клавиши
 UIS.InputBegan:Connect(function(input, gpe)
  if gpe then return end
 
- -- 🪽 ФЛАЙ (H)
  if input.KeyCode == Enum.KeyCode.H then
   if flying then stopFly() else startFly() end
  end
 
- -- 🌞 FULLBRIGHT (Y)
  if input.KeyCode == Enum.KeyCode.Y then
   fullbright = not fullbright
-  if fullbright then
-   enableFullbright()
-  else
-   disableFullbright()
-  end
+  if fullbright then enableFullbright() else disableFullbright() end
+ end
+
+ if input.KeyCode == Enum.KeyCode.K then
+  speedOn = not speedOn
+  humanoid.WalkSpeed = speedOn and walkspeed or 16
+ end
+
+ -- 👁 CTRL показать/скрыть GUI
+ if input.KeyCode == Enum.KeyCode.LeftControl then
+  frame.Visible = not frame.Visible
  end
 end)
 
