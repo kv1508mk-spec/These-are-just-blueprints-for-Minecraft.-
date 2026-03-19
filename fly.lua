@@ -104,12 +104,11 @@ local function makeButton(text, y)
  return btn
 end
 
--- кнопки
 local flyBtn = makeButton("Fly: OFF",0)
 local fbBtn = makeButton("FullBright: OFF",40)
 local speedBtn = makeButton("Speed: OFF",80)
 
--- скорость
+-- 🎚 скорость
 local speedLabel = Instance.new("TextLabel", frame)
 speedLabel.Size = UDim2.new(1,0,0,30)
 speedLabel.Position = UDim2.new(0,0,0,120)
@@ -120,7 +119,7 @@ speedLabel.TextColor3 = Color3.new(1,1,1)
 local plusBtn = makeButton("+",150)
 local minusBtn = makeButton("-",190)
 
--- ❌ Закрыть GUI и выключить всё
+-- ❌ кнопка закрыть
 local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Size = UDim2.new(0,30,0,30)
 closeBtn.Position = UDim2.new(1,-35,0,5)
@@ -128,7 +127,7 @@ closeBtn.Text = "X"
 closeBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
 closeBtn.TextColor3 = Color3.new(1,1,1)
 
--- 🖱 Перетаскивание GUI
+-- 🖱 перетаскивание
 local dragging = false
 local dragInput
 local dragStart
@@ -170,25 +169,15 @@ end)
 
 -- 🪽 Fly
 flyBtn.MouseButton1Click:Connect(function()
- if flying then
-  stopFly()
-  flyBtn.Text = "Fly: OFF"
- else
-  startFly()
-  flyBtn.Text = "Fly: ON"
- end
+ if flying then stopFly() flyBtn.Text = "Fly: OFF"
+ else startFly() flyBtn.Text = "Fly: ON" end
 end)
 
 -- 🌞 FullBright
 fbBtn.MouseButton1Click:Connect(function()
  fullbright = not fullbright
- if fullbright then
-  enableFullbright()
-  fbBtn.Text = "FullBright: ON"
- else
-  disableFullbright()
-  fbBtn.Text = "FullBright: OFF"
- end
+ if fullbright then enableFullbright() fbBtn.Text = "FullBright: ON"
+ else disableFullbright() fbBtn.Text = "FullBright: OFF" end
 end)
 
 -- ⚡ Speed
@@ -198,21 +187,20 @@ speedBtn.MouseButton1Click:Connect(function()
  speedBtn.Text = speedOn and "Speed: ON" or "Speed: OFF"
 end)
 
--- ➕ скорость
+-- ➕➖ скорость
 plusBtn.MouseButton1Click:Connect(function()
- walkspeed = walkspeed + 5
+ walkspeed += 5
  speedLabel.Text = "Speed: "..walkspeed
  if speedOn then humanoid.WalkSpeed = walkspeed end
 end)
 
--- ➖ скорость
 minusBtn.MouseButton1Click:Connect(function()
  walkspeed = math.max(5, walkspeed - 5)
  speedLabel.Text = "Speed: "..walkspeed
  if speedOn then humanoid.WalkSpeed = walkspeed end
 end)
 
--- ❌ кнопка закрыть
+-- ❌ Close (выключает всё)
 closeBtn.MouseButton1Click:Connect(function()
  if flying then stopFly() flyBtn.Text = "Fly: OFF" end
  speedOn = false
@@ -240,25 +228,33 @@ UIS.InputBegan:Connect(function(input, gpe)
   humanoid.WalkSpeed = speedOn and walkspeed or 16
  end
 
- -- 👁 CTRL показать/скрыть GUI
+ -- 👁 CTRL
  if input.KeyCode == Enum.KeyCode.LeftControl then
   frame.Visible = not frame.Visible
  end
 end)
 
--- 🚀 движение
+-- 🚀 ДВИЖЕНИЕ (фикс для телефона)
 RunService.RenderStepped:Connect(function()
  if not flying then return end
 
  local cam = workspace.CurrentCamera
  local dir = Vector3.zero
 
+ -- ПК
  if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
  if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
  if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
  if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+
+ -- вверх/вниз
  if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
  if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.new(0,1,0) end
+
+ -- 📱 ТЕЛЕФОН (главный фикс)
+ if char and humanoid then
+  dir += humanoid.MoveDirection
+ end
 
  if dir.Magnitude > 0 then dir = dir.Unit end
 
