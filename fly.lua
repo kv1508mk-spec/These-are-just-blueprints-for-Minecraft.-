@@ -202,7 +202,7 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- 🚀 ФЛАЙ (ПК + телефон)
+-- 🚀 ФИНАЛЬНЫЙ ФЛАЙ (НЕ ЛОМАЕТСЯ)
 RunService.RenderStepped:Connect(function()
     if not flying then return end
 
@@ -210,17 +210,14 @@ RunService.RenderStepped:Connect(function()
     local move = humanoid.MoveDirection
     local dir = Vector3.zero
 
-    -- вперёд / назад (по камере, БЕЗ инверсии)
     if move.Z ~= 0 then
         dir += cam.CFrame.LookVector * move.Z
     end
 
-    -- влево / вправо
     if move.X ~= 0 then
         dir += cam.CFrame.RightVector * move.X
     end
 
-    -- вверх / вниз (ПК)
     if UIS:IsKeyDown(Enum.KeyCode.Space) then
         dir += Vector3.new(0,1,0)
     end
@@ -228,12 +225,10 @@ RunService.RenderStepped:Connect(function()
         dir -= Vector3.new(0,1,0)
     end
 
-    -- нормализация
     if dir.Magnitude > 0 then
         dir = dir.Unit
     end
 
-    -- применение
     if bv and bg then
         bv.Velocity = dir * speed
         bg.CFrame = cam.CFrame
