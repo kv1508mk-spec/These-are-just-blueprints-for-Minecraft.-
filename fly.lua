@@ -200,7 +200,7 @@ minusBtn.MouseButton1Click:Connect(function()
  if speedOn then humanoid.WalkSpeed = walkspeed end
 end)
 
--- ❌ Close (выключает всё)
+-- ❌ Close
 closeBtn.MouseButton1Click:Connect(function()
  if flying then stopFly() flyBtn.Text = "Fly: OFF" end
  speedOn = false
@@ -228,31 +228,25 @@ UIS.InputBegan:Connect(function(input, gpe)
   humanoid.WalkSpeed = speedOn and walkspeed or 16
  end
 
- -- 👁 CTRL
  if input.KeyCode == Enum.KeyCode.LeftControl then
   frame.Visible = not frame.Visible
  end
 end)
 
--- 🚀 ДВИЖЕНИЕ (фикс для телефона)
+-- 🚀 НОВЫЙ ФЛАЙ (КАМЕРА!)
 RunService.RenderStepped:Connect(function()
  if not flying then return end
 
  local cam = workspace.CurrentCamera
  local dir = Vector3.zero
 
- -- 📱 + ПК движение через джойстик / WASD
  if humanoid then
   local move = humanoid.MoveDirection
   
-  -- вперёд / назад по направлению камеры
   dir += cam.CFrame.LookVector * move.Z * -1
-  
-  -- влево / вправо
   dir += cam.CFrame.RightVector * move.X
  end
 
- -- ПК вверх/вниз остаётся
  if UIS:IsKeyDown(Enum.KeyCode.Space) then
   dir += Vector3.new(0,1,0)
  end
@@ -263,19 +257,6 @@ RunService.RenderStepped:Connect(function()
  if dir.Magnitude > 0 then
   dir = dir.Unit
  end
-
- if bv and bg then
-  bv.Velocity = dir * speed
-  bg.CFrame = cam.CFrame
- end
-end)
-
- -- 📱 ТЕЛЕФОН (главный фикс)
- if char and humanoid then
-  dir += humanoid.MoveDirection
- end
-
- if dir.Magnitude > 0 then dir = dir.Unit end
 
  if bv and bg then
   bv.Velocity = dir * speed
