@@ -13,6 +13,9 @@ local oldLighting = {}
 local char, root, humanoid
 local bv, bg
 
+local upBtn, downBtn -- кнопки для вертикального движения на мобильном
+local moveUp, moveDown = false, false
+
 -- 👤 Настройка персонажа
 local function setup()
     char = player.Character or player.CharacterAdded:Wait()
@@ -51,18 +54,7 @@ player.Idled:Connect(function()
     VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
 
--- 👻 Ноуклип
-RunService.Stepped:Connect(function()
-    if flying and char then
-        for _, p in pairs(char:GetDescendants()) do
-            if p:IsA("BasePart") then
-                p.CanCollide = false
-            end
-        end
-    end
-end)
-
--- 🪽 Fly функции
+-- 🪽 Fly
 local function startFly()
     flying = true
     humanoid:ChangeState(Enum.HumanoidStateType.Physics)
@@ -115,6 +107,7 @@ speedLabel.TextColor3 = Color3.new(1,1,1)
 local plusBtn = makeButton("+",150)
 local minusBtn = makeButton("-",190)
 
+-- ❌ Close
 local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Size = UDim2.new(0,30,0,30)
 closeBtn.Position = UDim2.new(1,-35,0,5)
@@ -124,10 +117,7 @@ closeBtn.TextColor3 = Color3.new(1,1,1)
 
 -- 🖱 Перетаскивание GUI
 local dragging = false
-local dragInput
-local dragStart
-local startPos
-
+local dragInput, dragStart, startPos
 frame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1
     or input.UserInputType == Enum.UserInputType.Touch then
@@ -141,23 +131,16 @@ frame.InputBegan:Connect(function(input)
         end)
     end
 end)
-
 frame.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement
     or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
 end)
-
 UIS.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - dragStart
-        frame.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
@@ -166,31 +149,26 @@ flyBtn.MouseButton1Click:Connect(function()
     if flying then stopFly() flyBtn.Text = "Fly: OFF"
     else startFly() flyBtn.Text = "Fly: ON" end
 end)
-
 fbBtn.MouseButton1Click:Connect(function()
     fullbright = not fullbright
     if fullbright then enableFullbright() fbBtn.Text = "FullBright: ON"
     else disableFullbright() fbBtn.Text = "FullBright: OFF" end
 end)
-
 speedBtn.MouseButton1Click:Connect(function()
     speedOn = not speedOn
     humanoid.WalkSpeed = speedOn and walkspeed or 16
     speedBtn.Text = speedOn and "Speed: ON" or "Speed: OFF"
 end)
-
 plusBtn.MouseButton1Click:Connect(function()
     walkspeed += 5
     speedLabel.Text = "Speed: "..walkspeed
     if speedOn then humanoid.WalkSpeed = walkspeed end
 end)
-
 minusBtn.MouseButton1Click:Connect(function()
     walkspeed = math.max(5, walkspeed - 5)
     speedLabel.Text = "Speed: "..walkspeed
     if speedOn then humanoid.WalkSpeed = walkspeed end
 end)
-
 closeBtn.MouseButton1Click:Connect(function()
     if flying then stopFly() flyBtn.Text = "Fly: OFF" end
     speedOn = false
@@ -200,18 +178,25 @@ closeBtn.MouseButton1Click:Connect(function()
     frame.Visible = false
 end)
 
--- 🚀 Fly (ПК и телефон)
+-- 🚀 Fly с камерой (ПК + телефон)
 RunService.RenderStepped:Connect(function()
     if not flying then return end
-    local dir = humanoid.MoveDirection -- движение работает и на ПК, и на телефоне
+    local cam = workspace.CurrentCamera
+    local dir = Vector3.zero
 
-    -- вверх/вниз
+    -- движение вперед/назад/влево/вправо по камере
+    local move = humanoid.MoveDirection
+    if move.Magnitude > 0 then
+        dir += (cam.CFrame:VectorToWorldSpace(move)).Unit
+    end
+
+    -- вертикально ПК
     if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
     if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
 
     if dir.Magnitude > 0 then dir = dir.Unit end
     if bv and bg then
         bv.Velocity = dir * speed
-        bg.CFrame = workspace.CurrentCamera.CFrame
+        bg.CFrame = cam.CFrame
     end
 end)
