@@ -55,7 +55,7 @@ end)
 
 -- 👻 ноуклип
 RunService.Stepped:Connect(function()
-    if flying then
+    if flying and char then
         for _, p in pairs(char:GetDescendants()) do
             if p:IsA("BasePart") then
                 p.CanCollide = false
@@ -216,16 +216,19 @@ UIS.InputBegan:Connect(function(input, gpe)
 
     if input.KeyCode == Enum.KeyCode.H then
         if flying then stopFly() else startFly() end
+        flyBtn.Text = flying and "Fly: ON" or "Fly: OFF"
     end
 
     if input.KeyCode == Enum.KeyCode.Y then
         fullbright = not fullbright
         if fullbright then enableFullbright() else disableFullbright() end
+        fbBtn.Text = fullbright and "FullBright: ON" or "FullBright: OFF"
     end
 
     if input.KeyCode == Enum.KeyCode.K then
         speedOn = not speedOn
         humanoid.WalkSpeed = speedOn and walkspeed or 16
+        speedBtn.Text = speedOn and "Speed: ON" or "Speed: OFF"
     end
 
     if input.KeyCode == Enum.KeyCode.LeftControl then
@@ -233,33 +236,49 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
--- 🚀 НОВЫЙ ФЛАЙ (КАМЕРА!)
+-- 🚀 Сенсорные кнопки для телефона
+local touchControls = {}
+local function createTouchButton(text, pos, dirVector)
+    local btn = Instance.new("TextButton", screen)
+    btn.Size = UDim2.new(0,50,0,50)
+    btn.Position = pos
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    btn.TextColor3 = Color3.new(1,1,1)
+
+    btn.MouseButton1Down:Connect(function()
+        touchControls[btn] = dirVector
+    end)
+    btn.MouseButton1Up:Connect(function()
+        touchControls[btn] = nil
+    end)
+    return btn
+end
+
+createTouchButton("↑", UDim2.new(0,100,1,-200), Vector3.new(0,0,-1))
+createTouchButton("↓", UDim2.new(0,100,1,-140), Vector3.new(0,0,1))
+createTouchButton("←", UDim2.new(0,40,1,-170), Vector3.new(-1,0,0))
+createTouchButton("→", UDim2.new(0,160,1,-170), Vector3.new(1,0,0))
+createTouchButton("▲", UDim2.new(0,220,1,-200), Vector3.new(0,1,0))
+createTouchButton("▼", UDim2.new(0,220,1,-140), Vector3.new(0,-1,0))
+
+-- 🚀 Флай по клавишам и сенсору
 RunService.RenderStepped:Connect(function()
     if not flying then return end
-
     local cam = workspace.CurrentCamera
     local dir = Vector3.zero
 
-    -- движение по клавишам
-    if UIS:IsKeyDown(Enum.KeyCode.W) then
-        dir += cam.CFrame.LookVector
-    end
-    if UIS:IsKeyDown(Enum.KeyCode.S) then
-        dir -= cam.CFrame.LookVector
-    end
-    if UIS:IsKeyDown(Enum.KeyCode.A) then
-        dir -= cam.CFrame.RightVector
-    end
-    if UIS:IsKeyDown(Enum.KeyCode.D) then
-        dir += cam.CFrame.RightVector
-    end
+    -- ПК
+    if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+    if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+    if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+    if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+    if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += cam.CFrame.UpVector end
+    if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= cam.CFrame.UpVector end
 
-    -- вверх/вниз по камере
-    if UIS:IsKeyDown(Enum.KeyCode.Space) then
-        dir += cam.CFrame.UpVector
-    end
-    if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
-        dir -= cam.CFrame.UpVector
+    -- Сенсорные кнопки
+    for _, vec in pairs(touchControls) do
+        dir += vec
     end
 
     if dir.Magnitude > 0 then
