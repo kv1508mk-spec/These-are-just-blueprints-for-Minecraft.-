@@ -3,6 +3,7 @@ local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 
+-- Настройки
 local flying = false
 local speed = 120
 local speedOn = false
@@ -13,10 +14,7 @@ local oldLighting = {}
 local char, root, humanoid
 local bv, bg
 
-local upBtn, downBtn -- кнопки для вертикального движения на мобильном
-local moveUp, moveDown = false, false
-
--- 👤 Настройка персонажа
+-- Настройка персонажа
 local function setup()
     char = player.Character or player.CharacterAdded:Wait()
     root = char:WaitForChild("HumanoidRootPart")
@@ -25,7 +23,7 @@ end
 setup()
 player.CharacterAdded:Connect(setup)
 
--- 🌞 FullBright
+-- FullBright
 local function enableFullbright()
     oldLighting.Brightness = Lighting.Brightness
     oldLighting.Ambient = Lighting.Ambient
@@ -46,7 +44,7 @@ local function disableFullbright()
     end
 end
 
--- 💤 Anti-AFK
+-- Anti-AFK
 local VirtualUser = game:GetService("VirtualUser")
 player.Idled:Connect(function()
     VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
@@ -54,7 +52,7 @@ player.Idled:Connect(function()
     VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
 
--- 🪽 Fly
+-- Fly функции
 local function startFly()
     flying = true
     humanoid:ChangeState(Enum.HumanoidStateType.Physics)
@@ -76,7 +74,7 @@ local function stopFly()
     if bg then bg:Destroy() end
 end
 
--- 🎛 GUI
+-- GUI
 local screen = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 local frame = Instance.new("Frame", screen)
 frame.Size = UDim2.new(0,220,0,180)
@@ -96,7 +94,6 @@ end
 local flyBtn = makeButton("Fly: OFF",0)
 local fbBtn = makeButton("FullBright: OFF",40)
 local speedBtn = makeButton("Speed: OFF",80)
-
 local speedLabel = Instance.new("TextLabel", frame)
 speedLabel.Size = UDim2.new(1,0,0,30)
 speedLabel.Position = UDim2.new(0,0,0,120)
@@ -107,44 +104,22 @@ speedLabel.TextColor3 = Color3.new(1,1,1)
 local plusBtn = makeButton("+",150)
 local minusBtn = makeButton("-",190)
 
--- ❌ Close
+-- Close
 local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Size = UDim2.new(0,30,0,30)
 closeBtn.Position = UDim2.new(1,-35,0,5)
 closeBtn.Text = "X"
 closeBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
 closeBtn.TextColor3 = Color3.new(1,1,1)
-
--- 🖱 Перетаскивание GUI
-local dragging = false
-local dragInput, dragStart, startPos
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-UIS.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+closeBtn.MouseButton1Click:Connect(function()
+    if flying then stopFly() end
+    speedOn = false
+    humanoid.WalkSpeed = 16
+    if fullbright then disableFullbright() fullbright = false end
+    frame.Visible = false
 end)
 
--- 🔹 GUI кнопки
+-- GUI кнопки
 flyBtn.MouseButton1Click:Connect(function()
     if flying then stopFly() flyBtn.Text = "Fly: OFF"
     else startFly() flyBtn.Text = "Fly: ON" end
@@ -169,28 +144,20 @@ minusBtn.MouseButton1Click:Connect(function()
     speedLabel.Text = "Speed: "..walkspeed
     if speedOn then humanoid.WalkSpeed = walkspeed end
 end)
-closeBtn.MouseButton1Click:Connect(function()
-    if flying then stopFly() flyBtn.Text = "Fly: OFF" end
-    speedOn = false
-    humanoid.WalkSpeed = 16
-    speedBtn.Text = "Speed: OFF"
-    if fullbright then disableFullbright() fullbright = false fbBtn.Text = "FullBright: OFF" end
-    frame.Visible = false
-end)
 
--- 🚀 Fly с камерой (ПК + телефон)
+-- Fly с камерой для ПК и телефона (джойстик)
 RunService.RenderStepped:Connect(function()
     if not flying then return end
     local cam = workspace.CurrentCamera
     local dir = Vector3.zero
 
-    -- движение вперед/назад/влево/вправо по камере
+    -- Движение вперёд/назад/влево/вправо по джойстику + камере
     local move = humanoid.MoveDirection
     if move.Magnitude > 0 then
         dir += (cam.CFrame:VectorToWorldSpace(move)).Unit
     end
 
-    -- вертикально ПК
+    -- Вертикаль только для ПК
     if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
     if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then dir -= Vector3.new(0,1,0) end
 
