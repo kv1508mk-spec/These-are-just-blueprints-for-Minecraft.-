@@ -207,14 +207,17 @@ RunService.RenderStepped:Connect(function()
     if not flying then return end
 
     local cam = workspace.CurrentCamera
-    local dir = humanoid.MoveDirection
+    local dir = Vector3.zero
 
-    -- поворачиваем персонажа в сторону камеры
-    if bg then
-        bg.CFrame = cam.CFrame
+    local move = humanoid.MoveDirection
+
+    -- ВПЕРЁД / НАЗАД (по камере)
+    if move.Magnitude > 0 then
+        dir += cam.CFrame.LookVector * move.Z * -1
+        dir += cam.CFrame.RightVector * move.X
     end
 
-    -- вверх/вниз (ПК)
+    -- ВВЕРХ / ВНИЗ (ПК)
     if UIS:IsKeyDown(Enum.KeyCode.Space) then
         dir += Vector3.new(0,1,0)
     end
@@ -226,7 +229,8 @@ RunService.RenderStepped:Connect(function()
         dir = dir.Unit
     end
 
-    if bv then
+    if bv and bg then
         bv.Velocity = dir * speed
+        bg.CFrame = cam.CFrame
     end
 end)
