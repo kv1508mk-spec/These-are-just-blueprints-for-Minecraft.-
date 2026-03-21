@@ -210,14 +210,17 @@ RunService.RenderStepped:Connect(function()
     local move = humanoid.MoveDirection
     local dir = Vector3.zero
 
+    -- ВПЕРЁД / НАЗАД (по камере, исправлено)
     if move.Z ~= 0 then
         dir += cam.CFrame.LookVector * move.Z
     end
 
+    -- ВЛЕВО / ВПРАВО
     if move.X ~= 0 then
         dir += cam.CFrame.RightVector * move.X
     end
 
+    -- ВВЕРХ / ВНИЗ (ПК)
     if UIS:IsKeyDown(Enum.KeyCode.Space) then
         dir += Vector3.new(0,1,0)
     end
@@ -225,10 +228,17 @@ RunService.RenderStepped:Connect(function()
         dir -= Vector3.new(0,1,0)
     end
 
+    -- Нормализация
     if dir.Magnitude > 0 then
         dir = dir.Unit
     end
 
+    -- Применение к телу
+    if bv and bg then
+        bv.Velocity = dir * speed
+        bg.CFrame = cam.CFrame
+    end
+end)
     if bv and bg then
         bv.Velocity = dir * speed
         bg.CFrame = cam.CFrame
