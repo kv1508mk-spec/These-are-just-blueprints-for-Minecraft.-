@@ -241,15 +241,34 @@ RunService.RenderStepped:Connect(function()
  local cam = workspace.CurrentCamera
  local dir = Vector3.zero
 
- -- ПК
- if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
- if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
- if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
- if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+ -- 📱 + ПК движение через джойстик / WASD
+ if humanoid then
+  local move = humanoid.MoveDirection
+  
+  -- вперёд / назад по направлению камеры
+  dir += cam.CFrame.LookVector * move.Z * -1
+  
+  -- влево / вправо
+  dir += cam.CFrame.RightVector * move.X
+ end
 
- -- вверх/вниз
- if UIS:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.new(0,1,0) end
- if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then dir -= Vector3.new(0,1,0) end
+ -- ПК вверх/вниз остаётся
+ if UIS:IsKeyDown(Enum.KeyCode.Space) then
+  dir += Vector3.new(0,1,0)
+ end
+ if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+  dir -= Vector3.new(0,1,0)
+ end
+
+ if dir.Magnitude > 0 then
+  dir = dir.Unit
+ end
+
+ if bv and bg then
+  bv.Velocity = dir * speed
+  bg.CFrame = cam.CFrame
+ end
+end)
 
  -- 📱 ТЕЛЕФОН (главный фикс)
  if char and humanoid then
