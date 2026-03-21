@@ -240,18 +240,35 @@ RunService.RenderStepped:Connect(function()
  local cam = workspace.CurrentCamera
  local dir = Vector3.zero
 
- if humanoid then
+ -- 📱 ТЕЛЕФОН
+ if UIS.TouchEnabled and humanoid then
   local move = humanoid.MoveDirection
-  
-  dir += cam.CFrame.LookVector * move.Z * -1
-  dir += cam.CFrame.RightVector * move.X
+
+  if move.Magnitude > 0 then
+   -- движение по направлению камеры
+   dir += cam.CFrame.LookVector * move.Z * -1
+   dir += cam.CFrame.RightVector * move.X
+  end
+
+ -- 💻 ПК
+ else
+  if UIS:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+  if UIS:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+  if UIS:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+  if UIS:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
  end
 
+ -- ⬆⬇ (работает везде)
  if UIS:IsKeyDown(Enum.KeyCode.Space) then
   dir += Vector3.new(0,1,0)
  end
  if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
   dir -= Vector3.new(0,1,0)
+ end
+
+ -- 📱 НАКЛОН КАМЕРЫ (главный фикс!)
+ if UIS.TouchEnabled then
+  dir += cam.CFrame.LookVector * 0.6
  end
 
  if dir.Magnitude > 0 then
