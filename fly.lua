@@ -213,7 +213,7 @@ RunService.RenderStepped:Connect(function()
 
     -- ВПЕРЁД / НАЗАД (по камере)
     if move.Magnitude > 0 then
-        dir += cam.CFrame.LookVector * move.Z
+        dir += cam.CFrame.LookVector * move.Z *
         dir += cam.CFrame.RightVector * move.X
     end
 
