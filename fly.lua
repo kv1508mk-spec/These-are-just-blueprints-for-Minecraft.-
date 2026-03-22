@@ -148,26 +148,31 @@ RunService.RenderStepped:Connect(function()
     local cam = workspace.CurrentCamera
     local dir = Vector3.zero
 
+    -- ВПЕРЁД / НАЗАД (исправлено)
     if UIS:IsKeyDown(Enum.KeyCode.W) then
         dir += cam.CFrame.LookVector
     end
     if UIS:IsKeyDown(Enum.KeyCode.S) then
-        dir -= cam.CFrame.LookVector
+        dir += -cam.CFrame.LookVector
     end
+
+    -- ВЛЕВО / ВПРАВО (исправлено)
     if UIS:IsKeyDown(Enum.KeyCode.A) then
-        dir -= cam.CFrame.RightVector
+        dir += -cam.CFrame.RightVector
     end
     if UIS:IsKeyDown(Enum.KeyCode.D) then
         dir += cam.CFrame.RightVector
     end
 
+    -- ВВЕРХ / ВНИЗ
     if UIS:IsKeyDown(Enum.KeyCode.Space) then
         dir += Vector3.new(0,1,0)
     end
     if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
-        dir -= Vector3.new(0,1,0)
+        dir += Vector3.new(0,-1,0)
     end
 
+    -- нормализация
     if dir.Magnitude > 0 then
         dir = dir.Unit
     end
