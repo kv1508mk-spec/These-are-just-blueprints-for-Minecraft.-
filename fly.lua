@@ -79,7 +79,7 @@ end
 -- 🎛 GUI
 local screen = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 local frame = Instance.new("Frame", screen)
-frame.Size = UDim2.new(0,220,0,140)
+frame.Size = UDim2.new(0,220,0,160)
 frame.Position = UDim2.new(0,20,0,100)
 frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 
@@ -96,6 +96,36 @@ end
 local flyBtn = makeButton("Fly: OFF",0)
 local fbBtn = makeButton("FullBright: OFF",40)
 local speedBtn = makeButton("Speed: OFF",80)
+
+-- ❌ КРЕСТИК (добавлен)
+local closeBtn = Instance.new("TextButton", frame)
+closeBtn.Size = UDim2.new(0,30,0,30)
+closeBtn.Position = UDim2.new(1,-35,0,5)
+closeBtn.Text = "X"
+closeBtn.BackgroundColor3 = Color3.fromRGB(120,0,0)
+closeBtn.TextColor3 = Color3.new(1,1,1)
+
+closeBtn.MouseButton1Click:Connect(function()
+    -- выключаем всё
+    if flying then
+        stopFly()
+        flyBtn.Text = "Fly: OFF"
+    end
+
+    if speedOn then
+        speedOn = false
+        humanoid.WalkSpeed = 16
+        speedBtn.Text = "Speed: OFF"
+    end
+
+    if fullbright then
+        disableFullbright()
+        fullbright = false
+        fbBtn.Text = "FullBright: OFF"
+    end
+
+    frame.Visible = false
+end)
 
 -- GUI кнопки
 flyBtn.MouseButton1Click:Connect(function()
@@ -148,31 +178,26 @@ RunService.RenderStepped:Connect(function()
     local cam = workspace.CurrentCamera
     local dir = Vector3.zero
 
-    -- ВПЕРЁД / НАЗАД (исправлено)
     if UIS:IsKeyDown(Enum.KeyCode.W) then
         dir += cam.CFrame.LookVector
     end
     if UIS:IsKeyDown(Enum.KeyCode.S) then
-        dir += -cam.CFrame.LookVector
+        dir -= cam.CFrame.LookVector
     end
-
-    -- ВЛЕВО / ВПРАВО (исправлено)
     if UIS:IsKeyDown(Enum.KeyCode.A) then
-        dir += -cam.CFrame.RightVector
+        dir -= cam.CFrame.RightVector
     end
     if UIS:IsKeyDown(Enum.KeyCode.D) then
         dir += cam.CFrame.RightVector
     end
 
-    -- ВВЕРХ / ВНИЗ
     if UIS:IsKeyDown(Enum.KeyCode.Space) then
         dir += Vector3.new(0,1,0)
     end
     if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
-        dir += Vector3.new(0,-1,0)
+        dir -= Vector3.new(0,1,0)
     end
 
-    -- нормализация
     if dir.Magnitude > 0 then
         dir = dir.Unit
     end
